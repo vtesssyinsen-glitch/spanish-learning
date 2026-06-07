@@ -8,11 +8,27 @@ If the user hasn't described the scene, ask:
 - 场景主题是什么？（例如：在银行、去医院、买东西等）
 - 对话难度？（初级/中级）
 
-## Workflow
+## Project Architecture
 
-### Step 1: Generate the scene content
+### Audio playback system
+- All Spanish audio is pre-generated as MP3 files in `audio/` directory
+- Filenames are MD5 hashes of the Spanish phrase text
+- `var _audioMap={...}` in index.html maps phrase → MD5 hash
+- `window._curAudio` is a single persistent `<audio>` DOM element used for all playback
+- `window._lastKey` tracks the last played audio key for toggle play/stop behavior
+- `window._spd` controls playback speed (1 or 0.8)
+- Clicking same button while playing → stops; clicking again → replays
+- Clicking different button → stops current, plays new
+- speechSynthesis is used as fallback only on devices with Spanish voices
 
-Create a new scene following the existing data structure in `index.html`. Each scene needs:
+### UI features
+- 🔊 per-sentence play/stop toggle buttons
+- `▶ 朗读全文` floating button (bottom-left): plays all dialogue sentences in sequence, shows `⏹ 停止朗读` while playing
+- `1x/0.8x` floating speed toggle button (bottom-right)
+- Both floating buttons only visible in dialogue view
+
+### Data structure
+Each scene in the `const u = [...]` array needs:
 - `id`: unique string
 - `title`: scene title in Chinese
 - `emoji`: relevant emoji
@@ -28,23 +44,19 @@ Create a new scene following the existing data structure in `index.html`. Each s
   - `pronunciation`: phonetic pronunciation
   - `chinese`: Chinese translation
 
+## Workflow
+
+### Step 1: Generate the scene content
+
+Create a new scene following the data structure above.
+
 ### Step 2: Add the scene to index.html
 
-Find the `const u = [...]` array in index.html (the scenes data array) and append the new scene object to it. Make sure the JSON syntax is valid.
+Find the `const u = [...]` array in index.html and append the new scene object. Make sure the JavaScript syntax is valid.
 
-### Step 3: Generate audio files
+### Step 3: Update the _audioMap in index.html
 
-Run this Python script to generate audio for the new phrases only (it skips existing ones):
-
-```bash
-python3 generate_audio.py
-```
-
-If the cloud environment cannot reach Google TTS (403 error), generate the audio map entry and tell the user to run `py generate_audio.py` on their Windows computer, then `git add audio/ && git commit -m "Add audio for new scene" && git push origin main`.
-
-### Step 4: Update the _audioMap in index.html
-
-The `_audioMap` JavaScript object in index.html needs to include the new phrases. Re-generate it by running:
+Re-generate the full `_audioMap` to include new phrases:
 
 ```python
 import hashlib, re
@@ -52,27 +64,41 @@ with open('index.html', 'r') as f:
     content = f.read()
 phrases = list(dict.fromkeys(re.findall(r'spanish:"([^"]+)"', content)))
 mapping = {p: hashlib.md5(p.encode()).hexdigest() for p in phrases}
-print(len(phrases), "phrases in map")
+# Replace var _audioMap={...} in index.html with updated mapping
 ```
 
-Then replace the old `var _audioMap={...}` in index.html with the updated map that includes all phrases including the new ones.
+### Step 4: Generate audio files
 
-### Step 5: Commit and push
+The cloud environment cannot reach Google TTS. Tell the user to run on their Windows computer:
+
+```
+cd %USERPROFILE%\Desktop\spanish-learning
+git pull
+py generate_audio.py
+git add audio/
+git commit -m "Add audio for new scene"
+git push origin main
+```
+
+The script skips already-existing audio files and only generates new ones.
+
+### Step 5: Commit and push index.html
 
 ```bash
-git add index.html audio/
-git commit -m "Add [scene name] scene with audio"
+git add index.html
+git commit -m "Add [scene name] scene"
 git push
 ```
 
 ### Step 6: Tell the user
 
-- If audio was generated here: "已完成！请去 GitHub 合并 PR。"
-- If audio needs to be generated on their Windows computer: Give them the exact commands to run, then merge PR.
+Give the user the Windows commands from Step 4, then tell them the website will be ready after they push the audio files (no PR merge needed since we push directly to main).
 
 ## Important notes
 
 - Always maintain valid JavaScript syntax in index.html
-- The `_audioMap` must include ALL phrases (not just new ones)
-- Audio filenames are MD5 hashes of the Spanish phrase text
+- The `_audioMap` must include ALL phrases (not just new ones) — regenerate the full map every time
+- Audio filenames are MD5 hashes of the Spanish phrase text: `hashlib.md5(phrase.encode()).hexdigest()`
 - The generate_audio.py script skips already-existing audio files
+- Push index.html changes directly to main (no PR needed)
+- Audio files are pushed directly to main from the user's Windows computer
