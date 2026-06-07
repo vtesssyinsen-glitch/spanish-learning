@@ -9,39 +9,32 @@
 
 <script>
 (function(){
+  // Speed toggle button (bottom-right)
   var _sb=document.createElement("button");
   _sb.style.cssText="position:fixed;bottom:80px;right:16px;z-index:9999;background:#b03a2e;color:#fff;border:none;border-radius:20px;padding:6px 14px;font-weight:bold;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:none;";
   _sb.textContent="1x";
   _sb.onclick=function(){window._spd=window._spd===1?.8:1;_sb.textContent=window._spd===1?"1x":"0.8x";};
   document.body.appendChild(_sb);
-  window._playAll=function(){
+
+  // Read-all button (bottom-left)
+  var _rb=document.createElement("button");
+  _rb.style.cssText="position:fixed;bottom:80px;left:16px;z-index:9999;background:#e74c3c;color:#fff;border:none;border-radius:20px;padding:6px 14px;font-weight:bold;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:none;";
+  _rb.textContent="▶ 朗读全文";
+  _rb.onclick=function(){
     var paras=Array.from(document.querySelectorAll("p.font-semibold.text-sm.leading-relaxed"));
     var texts=paras.map(function(p){return p.textContent.trim();}).filter(function(t){return t.length>0;});
     if(!texts.length)return;
     var i=0;
-    function next(){
-      if(i>=texts.length)return;
-      window._d(texts[i]);
-      i++;
-      setTimeout(next,2800);
-    }
+    function next(){if(i>=texts.length)return;window._d(texts[i]);i++;setTimeout(next,2800);}
     next();
   };
+  document.body.appendChild(_rb);
+
+  // Show/hide both buttons based on current view
   var _obs=new MutationObserver(function(){
     var inDialogue=Array.from(document.querySelectorAll("p")).some(function(p){return p.textContent.includes("点击听发音");});
     _sb.style.display=inDialogue?"block":"none";
-    if(inDialogue&&!document.getElementById("_readall_btn")){
-      var hint=Array.from(document.querySelectorAll("p")).find(function(p){return p.textContent.includes("点击听发音");});
-      if(hint){
-        var rb=document.createElement("button");
-        rb.id="_readall_btn";
-        rb.textContent="▶ 朗读全文";
-        rb.style.cssText="display:block;margin:4px auto 8px;background:#e74c3c;color:#fff;border:none;border-radius:16px;padding:6px 22px;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15);";
-        rb.onclick=window._playAll;
-        hint.parentNode.insertBefore(rb,hint.nextSibling);
-      }
-    }
-    if(!inDialogue){var old=document.getElementById("_readall_btn");if(old)old.remove();}
+    _rb.style.display=inDialogue?"block":"none";
   });
   _obs.observe(document.body,{childList:true,subtree:true});
 })();
