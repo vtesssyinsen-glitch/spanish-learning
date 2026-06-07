@@ -15,12 +15,13 @@
   _sb.onclick=function(){window._spd=window._spd===1?.8:1;_sb.textContent=window._spd===1?"1x":"0.8x";};
   document.body.appendChild(_sb);
   window._playAll=function(){
-    var btns=Array.from(document.querySelectorAll("button")).filter(function(b){return b.textContent.trim()==="🔊";});
-    if(!btns.length)return;
+    var paras=Array.from(document.querySelectorAll("p.font-semibold.text-sm.leading-relaxed"));
+    var texts=paras.map(function(p){return p.textContent.trim();}).filter(function(t){return t.length>0;});
+    if(!texts.length)return;
     var i=0;
     function next(){
-      if(i>=btns.length)return;
-      btns[i].click();
+      if(i>=texts.length)return;
+      window._d(texts[i]);
       i++;
       setTimeout(next,2800);
     }
