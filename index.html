@@ -15,12 +15,12 @@
   _sb.onclick=function(){window._spd=window._spd===1?.8:1;_sb.textContent=window._spd===1?"1x":"0.8x";};
   document.body.appendChild(_sb);
   window._playAll=function(){
-    var btns=Array.from(document.querySelectorAll('[title="播放发音"]'));
+    var btns=Array.from(document.querySelectorAll("button")).filter(function(b){return b.textContent.trim()==="🔊";});
     if(!btns.length)return;
     var i=0;
     function next(){
       if(i>=btns.length)return;
-      btns[i].dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));
+      btns[i].click();
       i++;
       setTimeout(next,2800);
     }
