@@ -20,12 +20,18 @@
   var _rb=document.createElement("button");
   _rb.style.cssText="position:fixed;bottom:80px;left:16px;z-index:9999;background:#e74c3c;color:#fff;border:none;border-radius:20px;padding:6px 14px;font-weight:bold;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:none;";
   _rb.textContent="▶ 朗读全文";
+  var _playing=false;var _stopFlag=false;
   _rb.onclick=function(){
+    if(_playing){_stopFlag=true;_playing=false;_rb.textContent="▶ 朗读全文";return;}
     var paras=Array.from(document.querySelectorAll("p.font-semibold.text-sm.leading-relaxed"));
     var texts=paras.map(function(p){return p.textContent.trim();}).filter(function(t){return t.length>0;});
     if(!texts.length)return;
+    _playing=true;_stopFlag=false;_rb.textContent="⏹ 停止朗读";
     var i=0;
-    function next(){if(i>=texts.length)return;window._d(texts[i]);i++;setTimeout(next,2800);}
+    function next(){
+      if(_stopFlag||i>=texts.length){_playing=false;_stopFlag=false;_rb.textContent="▶ 朗读全文";return;}
+      window._d(texts[i]);i++;setTimeout(next,2800);
+    }
     next();
   };
   document.body.appendChild(_rb);
